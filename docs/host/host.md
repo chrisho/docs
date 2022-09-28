@@ -80,3 +80,81 @@ If you are testing Harvester in a QEMU environment, you'll need to use QEMU v6.0
 
 ![Edit Config](/img/v1.1/host/edit-config.png)
 ![Add Disks](/img/v1.1/host/add-disks.png)
+
+## Ksmtuned Mode
+
+Ksmtuned is a KSM automation tool deployed as a DaemonSet to run Ksmtuned on each node. It can start or stop KSM by setting the available memory percentage ratio (**Threshold Coefficient**). By default, you need to manually enable Ksmtuned on each node UI. You can see the KSM statistics from the node UI (for details, see [KSM](https://www.kernel.org/doc/html/latest/admin-guide/mm/ksm.html#ksm-daemon-sysfs-interface)).
+
+### **Quick Run**
+
+1. Go to the **Hosts** page.
+2. On the node you want to modify, click **⋮ > Edit Config**.
+3. Select the **Ksmtuned** tab and **Run Strategy** in Run.
+4. (Optional) You can modify **Threshold Coefficient** as needed.
+
+![Edit Ksmtuned](/img/v1.1/host/edit-ksmtuned.png)
+
+5. Click **Save** to update.
+6. Wait at least 2 minutes and check the **Statistics**, click **⋮ >  Your Node > Ksmtuned tab.**
+
+![View Ksmtuned Statistics](/img/v1.1/host/view-ksmtuned-statistics.png)
+
+### **Parameters**
+
+**Run Strategy：**
+
+- **Stop:** Stop Ksmtuned and KSM. VMs can still use shared memory pages.
+- **Run:** Run Ksmtuned.
+- **Prune:** Stop Ksmtuned and prune KSM memory pages.
+
+**Threshold Coefficient**: configures the available memory percentage ratio. If the available memory is less than the threshold, KSM will be started; otherwise, KSM will be stopped.
+
+**Merge Across Nodes:** specifies if pages from different NUMA nodes can be merged.
+
+**Mode:**
+
+- **Standard:** The default mode. The control node ksmd uses about 20% of a single CPU. It uses the following parameters:
+
+```yaml
+Boost: 0
+Decay: 0
+Maximum Pages: 100
+Minimum Pages: 100
+Sleep Time: 20
+```
+
+- **High-performance:** Node ksmd uses 20% to 100% of a single CPU and has higher scanning and merging efficiency. It uses the following parameters:
+
+```yaml
+Boost: 200
+Decay: 50
+Maximum Pages: 100
+Minimum Pages: 10000
+Sleep Time: 20
+```
+
+- **Customized:** You can customize the configuration to reach the performance that you want.
+
+Ksmtuned uses the following parameters to control KSM efficiency:
+
+- **Boost**: The number of scanned pages is incremented each time if the available memory is less than the **Threshold Coefficient**.
+- **Decay**: The number of scanned pages is decremented each time if the available memory is greater than the **Threshold Coefficient**.
+- **Maximum Pages**: Maximum number of pages per scan.
+- **Minimum Pages**: The minimum number of pages per scan, also the configuration for the first run.
+- **Sleep Time(ms)**: The interval between two scans, which is calculated with the formula: **Sleep Time** \* 16 \* 1024 \* 1024 / Total Memory. Minimum: 10ms.
+
+**Assume you have a 512GiB memory node that uses the following parameters:**
+
+```yaml
+Boost: 300
+Decay: 100
+Minimum Pages: 1000
+Maximum Pages: 5000
+Sleep Time: 50
+```
+
+When Ksmtuned starts, initialize `pages_to_scan` in KSM to 1000 (**Minimum Pages**) and set `sleep_millisecs` to 10 (50 \* 16 \* 1024 \* 1024 / 536870912 KiB < 10).
+
+KSM is started when the available memory is below the **Threshold Coefficient**, and if it is detected as running in each period (1 minute), `pages_to_scan` is incremented by 300 (**Boost**) until it reaches 5000 (**Maximum Pages**).
+
+KSM is stopped when the available memory is higher than the **Threshold Coefficient**, and if it is detected as stopped in each period, `pages_to_scan` is decremented by 100 (**Decay**) until it reaches 1000 (**Minimum Pages**).
