@@ -16,7 +16,7 @@ steps:
         path: /var/run/docker.sock
     when:
       branch:
-        - refs/heads/*
+        - *
       event:
         - push
         - pull_request
@@ -30,7 +30,7 @@ steps:
         path: /var/run/docker.sock
     when:
       branch:
-        - refs/heads/*
+        - *
       event:
         - push
         - pull_request
@@ -46,7 +46,7 @@ steps:
         path: /var/run/docker.sock
     when:
       branch:
-        - refs/heads/*
+        - *
       event:
         - push
         - pull_request
@@ -60,7 +60,7 @@ steps:
       path: ./build.zip
     when:
       branch:
-        - refs/heads/*
+        - *
       event:
         - push
         - pull_request
@@ -70,9 +70,3 @@ volumes:
   - name: docker
     host:
       path: /var/run/docker.sock
-
-trigger:
-  ref:
-    - "refs/heads/*"
-  event:
-    - *
