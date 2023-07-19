@@ -1,0 +1,78 @@
+---
+kind: pipeline
+name: amd64
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: install
+    image: node:18
+    commands:
+      - yarn install --frozen-lockfile
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+    when:
+      branch:
+        - refs/heads/*
+      event:
+        - push
+        - pull_request
+
+  - name: build
+    image: node:18
+    commands:
+      - NODE_OPTIONS="--max-old-space-size=4096" yarn build
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+    when:
+      branch:
+        - refs/heads/*
+      event:
+        - push
+        - pull_request
+
+
+  - name: package
+    image: ubuntu:latest
+    commands:
+      - apt-get update && apt-get -y install zip
+      - zip -q -r build.zip build/
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+    when:
+      branch:
+        - refs/heads/*
+      event:
+        - push
+        - pull_request
+
+
+  - name: preview
+    image: lucap/drone-netlify
+    settings:
+      token: 5gzUqlm83lRBkfJDeHDHIph35fdbtQbG6EjziAuM6_c
+      site_id: 71c62326-5c59-49c1-8315-fe9b5e6c6aab
+      path: ./build.zip
+    when:
+      branch:
+        - refs/heads/*
+      event:
+        - push
+        - pull_request
+
+
+volumes:
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+
+trigger:
+  ref:
+    - "refs/heads/*"
+  event:
+    - *
