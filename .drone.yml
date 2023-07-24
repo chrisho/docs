@@ -75,44 +75,46 @@ trigger:
   event:
     - pull_request
 
-#---
-#kind: pipeline
-#name: release
-#
-#platform:
-#  os: linux
-#  arch: amd64
-#
-#steps:
-#  - name: install
-#    image: node:18-alpine
-#    commands:
-#      - yarn install --frozen-lockfile
-#    volumes:
-#      - name: docker
-#        path: /var/run/docker.sock
-#
-#  - name: ignore-openapi
-#    image: ubuntu:latest
-#    commands:
-#      - ./scripts/clean-openapi
-#    volumes:
-#      - name: docker
-#        path: /var/run/docker.sock
-#
-#  - name: build
-#    image: node:18-alpine
-#    commands:
-#      - NODE_OPTIONS="--max-old-space-size=8192" yarn build
-#    volumes:
-#      - name: docker
-#        path: /var/run/docker.sock
-#
-#volumes:
-#  - name: docker
-#    host:
-#      path: /var/run/docker.sock
-#
-#trigger:
-#  branch:
-#    - main
+---
+kind: pipeline
+name: release
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: install
+    image: node:18-alpine
+    commands:
+      - yarn install --frozen-lockfile
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+
+  - name: ignore-openapi
+    image: ubuntu:latest
+    commands:
+      - ./scripts/clean-openapi
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+
+  - name: build
+    image: node:18-alpine
+    commands:
+      - NODE_OPTIONS="--max-old-space-size=8192" yarn build
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+
+volumes:
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+
+trigger:
+  branch:
+    - main
+  event:
+    - push
