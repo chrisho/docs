@@ -1,6 +1,6 @@
 ---
 kind: pipeline
-name: amd64
+name: preview
 
 platform:
   os: linux
@@ -8,33 +8,38 @@ platform:
 
 steps:
   - name: install
-    image: node:18
+    image: node:18-alpine
     commands:
-      - yarn install --frozen-lockfile
+      - yarn install
     volumes:
       - name: docker
         path: /var/run/docker.sock
     when:
-      branch:
-        - refs/heads/*
       event:
-        - push
+        - pull_request
+
+  - name: ignore-openapi # check the api/swagger.json and docs/api/*
+    image: node:18-alpine
+    commands:
+      - apk update && apk add git
+      - ./scripts/ignore-openapi
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+    when:
+      event:
         - pull_request
 
   - name: build
-    image: node:18
+    image: node:18-alpine
     commands:
-      - NODE_OPTIONS="--max-old-space-size=4096" yarn build
+      - NODE_OPTIONS="--max-old-space-size=8192" yarn build
     volumes:
       - name: docker
         path: /var/run/docker.sock
     when:
-      branch:
-        - refs/heads/*
       event:
-        - push
         - pull_request
-
 
   - name: package
     image: ubuntu:latest
@@ -45,26 +50,21 @@ steps:
       - name: docker
         path: /var/run/docker.sock
     when:
-      branch:
-        - refs/heads/*
       event:
-        - push
         - pull_request
-
 
   - name: preview
-    image: lucap/drone-netlify
-    settings:
-      token: 5gzUqlm83lRBkfJDeHDHIph35fdbtQbG6EjziAuM6_c
-      site_id: 71c62326-5c59-49c1-8315-fe9b5e6c6aab
-      path: ./build.zip
+    image: chhooo/drone-netlify:v0.1.0
+    environment:
+      NETLIFY_AUTH_TOKEN:
+        from_secret: NETLIFY_AUTH_TOKEN
+      NETLIFY_SITE_ID:
+        from_secret: NETLIFY_SITE_ID
+      GITHUB_TOKEN:
+        from_secret: GITHUB_TOKEN
     when:
-      branch:
-        - refs/heads/*
       event:
-        - push
         - pull_request
-
 
 volumes:
   - name: docker
@@ -72,7 +72,47 @@ volumes:
       path: /var/run/docker.sock
 
 trigger:
-  ref:
-    - "refs/heads/*"
   event:
-    - *
+    - pull_request
+
+#---
+#kind: pipeline
+#name: release
+#
+#platform:
+#  os: linux
+#  arch: amd64
+#
+#steps:
+#  - name: install
+#    image: node:18-alpine
+#    commands:
+#      - yarn install --frozen-lockfile
+#    volumes:
+#      - name: docker
+#        path: /var/run/docker.sock
+#
+#  - name: ignore-openapi
+#    image: ubuntu:latest
+#    commands:
+#      - ./scripts/clean-openapi
+#    volumes:
+#      - name: docker
+#        path: /var/run/docker.sock
+#
+#  - name: build
+#    image: node:18-alpine
+#    commands:
+#      - NODE_OPTIONS="--max-old-space-size=8192" yarn build
+#    volumes:
+#      - name: docker
+#        path: /var/run/docker.sock
+#
+#volumes:
+#  - name: docker
+#    host:
+#      path: /var/run/docker.sock
+#
+#trigger:
+#  branch:
+#    - main
