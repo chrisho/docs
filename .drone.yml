@@ -10,15 +10,12 @@ steps:
   - name: install
     image: node:18-alpine
     commands:
-      - yarn install
+      - yarn install --frozen-lockfile
     volumes:
       - name: docker
         path: /var/run/docker.sock
-    when:
-      event:
-        - pull_request
 
-  - name: ignore-openapi # check the api/swagger.json and docs/api/*
+  - name: ignore-openapi
     image: node:18-alpine
     commands:
       - apk update && apk add git
@@ -26,9 +23,6 @@ steps:
     volumes:
       - name: docker
         path: /var/run/docker.sock
-    when:
-      event:
-        - pull_request
 
   - name: build
     image: node:18-alpine
@@ -37,9 +31,6 @@ steps:
     volumes:
       - name: docker
         path: /var/run/docker.sock
-    when:
-      event:
-        - pull_request
 
   - name: package
     image: ubuntu:latest
@@ -49,9 +40,6 @@ steps:
     volumes:
       - name: docker
         path: /var/run/docker.sock
-    when:
-      event:
-        - pull_request
 
   - name: preview
     image: chhooo/drone-netlify:v0.1.0
@@ -62,9 +50,6 @@ steps:
         from_secret: NETLIFY_SITE_ID
       GITHUB_TOKEN:
         from_secret: GITHUB_TOKEN
-    when:
-      event:
-        - pull_request
 
 volumes:
   - name: docker
@@ -93,9 +78,10 @@ steps:
         path: /var/run/docker.sock
 
   - name: ignore-openapi
-    image: ubuntu:latest
+    image: node:18-alpine
     commands:
-      - ./scripts/clean-openapi
+      - apk update && apk add git
+      - ./scripts/ignore-openapi
     volumes:
       - name: docker
         path: /var/run/docker.sock
