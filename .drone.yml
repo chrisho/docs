@@ -42,7 +42,7 @@ steps:
         path: /var/run/docker.sock
 
   - name: preview
-    image: chhooo/drone-netlify:v0.1.0
+    image: chhooo/drone-netlify:v0.1.1
     environment:
       NETLIFY_AUTH_TOKEN:
         from_secret: NETLIFY_AUTH_TOKEN
@@ -77,16 +77,15 @@ steps:
       - name: docker
         path: /var/run/docker.sock
 
-  - name: ignore-openapi
+  - name: build
     image: node:18-alpine
     commands:
-      - apk update && apk add git
-      - ./scripts/ignore-openapi
+      - NODE_OPTIONS="--max-old-space-size=8192" yarn build
     volumes:
       - name: docker
         path: /var/run/docker.sock
 
-  - name: build
+  - name: release
     image: node:18-alpine
     commands:
       - NODE_OPTIONS="--max-old-space-size=8192" yarn build
