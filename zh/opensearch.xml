@@ -4,8 +4,8 @@
   <ShortName>Harvester</ShortName>
   <Description>Search Harvester</Description>
   <InputEncoding>UTF-8</InputEncoding>
-  <Image width="16" height="16" type="image/x-icon">https://docs.harvesterhci.io/zh/img/favicon.ico</Image>
-  <Url type="text/html" method="get" template="https://docs.harvesterhci.io/zh/search?q={searchTerms}"/>
-  <Url type="application/opensearchdescription+xml" rel="self" template="https://docs.harvesterhci.io/zh/opensearch.xml" />
-  <moz:SearchForm>https://docs.harvesterhci.io/zh/</moz:SearchForm>
+  <Image width="16" height="16" type="image/x-icon">https://docs.harvesterhci.io/docs/zh/img/favicon.ico</Image>
+  <Url type="text/html" method="get" template="https://docs.harvesterhci.io/docs/zh/search?q={searchTerms}"/>
+  <Url type="application/opensearchdescription+xml" rel="self" template="https://docs.harvesterhci.io/docs/zh/opensearch.xml" />
+  <moz:SearchForm>https://docs.harvesterhci.io/docs/zh/</moz:SearchForm>
 </OpenSearchDescription>
